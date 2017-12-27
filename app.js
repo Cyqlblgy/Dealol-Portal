@@ -5,6 +5,7 @@ var mongoose = require('mongoose');
 var url = require('url');
 var https = require('https');
 var Deals = require('./models/deals');
+var restify = require('restify');
 
 //Var initialization
 var host = 'api.walmartlabs.com';
@@ -13,6 +14,17 @@ var apiKey = 'qfnzsf9wyvhcr4szm7se78sb';
 //Connect to mongoose, TODO: add db if necessary
 // mongoose.connect('mongodb://localhost/server',{ useMongoClient: true });
 // var db = mongoose.connection;
+
+var ip_addr = '172.30.207.161';
+var port    =  '8080';
+
+var server = restify.createServer({
+    name : "dealol"
+});
+
+server.listen(port ,ip_addr, function(error){
+    console.log('%s listening at %s ', server.name , server.url);
+});
 
 function performRequest(endpoint, method, data, success) {
   var dataString = JSON.stringify(data);
@@ -52,7 +64,7 @@ function performRequest(endpoint, method, data, success) {
   req.end();
 }
 
-app.get('/api/deals/search',function(req, res){
+server.get('/api/deals/search',function(req, res){
   var baseEndPoint = '/v1/search?apiKey=' + apiKey;
   var queryData = url.parse(req.url, true).query;
   var resultDeals = new Deals();

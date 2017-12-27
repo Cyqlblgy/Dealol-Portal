@@ -12,7 +12,8 @@
     "body-parser": "*",
     "mongoose": "*",
     "https": "*",
-    "url": "*"
+    "url": "*",
+    "restify": "*"
   },
   "author": "binlang",
   "license": "ISC"
