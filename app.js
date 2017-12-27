@@ -4,6 +4,7 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var url = require('url');
 var https = require('https');
+var Deals = require('./models/deals');
 
 //Var initialization
 var host = 'api.walmartlabs.com';
@@ -51,16 +52,10 @@ function performRequest(endpoint, method, data, success) {
   req.end();
 }
 
-function rebuildResponse(source,data,targetObject){
-  if(source == 'Walmart'){
-    targetObject = {"Walmart":data};
-  }
-  return targetObject;
-}
-
 app.get('/api/deals/search',function(req, res){
   var baseEndPoint = '/v1/search?apiKey=' + apiKey;
   var queryData = url.parse(req.url, true).query;
+  var resultDeals = new Deals();
   console.log(queryData);
   if(queryData.productName != null){
       baseEndPoint += '&query=' + queryData.productName;
@@ -87,7 +82,8 @@ app.get('/api/deals/search',function(req, res){
     console.log(baseEndPoint);
     performRequest(baseEndPoint, 'GET', null,
     function(data) {
-      res.send(rebuildResponse('Walmart',data));
+      resultDeals.addDeals('Walmart',data);
+      res.send(resultDeals.getAllDeals());
     });
   }
   else{
