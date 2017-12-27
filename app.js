@@ -91,7 +91,3 @@ app.get('/api/deals/search',function(req, res){
     res.send('productName is required');
   }
 });
-
-
-
-app.listen(3000);
