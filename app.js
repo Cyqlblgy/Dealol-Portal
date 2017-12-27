@@ -15,14 +15,14 @@ var apiKey = 'qfnzsf9wyvhcr4szm7se78sb';
 // mongoose.connect('mongodb://localhost/server',{ useMongoClient: true });
 // var db = mongoose.connection;
 
-var ip_addr = '172.30.207.161';
-var port    =  '8080';
+var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
+    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
 
 var server = restify.createServer({
     name : "dealol"
 });
 
-server.listen(port ,ip_addr, function(error){
+server.listen(port ,ip, function(error){
     console.log('%s listening at %s ', server.name , server.url);
 });
 
