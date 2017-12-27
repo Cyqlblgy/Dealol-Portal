@@ -16,7 +16,7 @@ var apiKey = 'qfnzsf9wyvhcr4szm7se78sb';
 // var db = mongoose.connection;
 
 var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
-    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
+    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0';
 
 var server = restify.createServer({
     name : "dealol"
