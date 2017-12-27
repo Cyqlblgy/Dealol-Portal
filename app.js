@@ -15,15 +15,11 @@ var apiKey = 'qfnzsf9wyvhcr4szm7se78sb';
 // mongoose.connect('mongodb://localhost/server',{ useMongoClient: true });
 // var db = mongoose.connection;
 
-var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
-    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0';
+app.set('port', process.env.PORT || 3000);
+app.set('host', process.env.HOST || '0.0.0.0');
 
-var server = restify.createServer({
-    name : "dealol"
-});
-
-server.listen(port ,ip, function(error){
-    console.log('%s listening at %s ', server.name , server.url);
+app.listen(app.get('port'), function(){
+  console.log('Express server listening on port ' + app.get('host') + ':' + app.get('port'));
 });
 
 function performRequest(endpoint, method, data, success) {
@@ -64,7 +60,7 @@ function performRequest(endpoint, method, data, success) {
   req.end();
 }
 
-server.get('/api/deals/search',function(req, res){
+app.get('/api/deals/search',function(req, res){
   var baseEndPoint = '/v1/search?apiKey=' + apiKey;
   var queryData = url.parse(req.url, true).query;
   var resultDeals = new Deals();
