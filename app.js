@@ -84,13 +84,17 @@ app.get('/deals/search',function(req, res){
     //start
     if(queryData.start != null){
       baseEndPoint += '&start=' + queryData.start;
+      baseEndPoint += '&end=' + queryData.start+1;
     }
     performRequest(baseEndPoint, 'GET', null,
     function(data) {
       resultDeals.addDeals('Walmart',data);
       isWalmartReady = true;
       if(isAmazonReady && isWalmartReady){
-        res.send(resultDeals.getAllDeals());
+        var returnResult = {};
+        returnResult.result = resultDeals.getAllDeals();
+        returnResult.totalNumber = resultDeals.getAllDeals().length;
+        res.send(returnResult);
       }
     });
 
@@ -101,11 +105,14 @@ app.get('/deals/search',function(req, res){
       availability: 'Available',
       responseGroup: 'ItemAttributes'
     }).then(function(results){
-      resultDeals.addDeals('Amazon',results);
       console.log(JSON.stringify(results, null, 4));
+      resultDeals.addDeals('Amazon',results);
       isAmazonReady = true;
       if(isAmazonReady && isWalmartReady){
-        res.send(resultDeals.getAllDeals());
+        var returnResult = {};
+        returnResult.result = resultDeals.getAllDeals();
+        returnResult.totalNumber = resultDeals.getAllDeals().length;
+        res.send(returnResult);
       }
     }).catch(function(err){
       var result = JSON.stringify(err);
