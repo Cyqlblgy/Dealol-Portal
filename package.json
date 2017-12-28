@@ -13,7 +13,6 @@
     "mongoose": "*",
     "https": "*",
     "url": "*",
-    "restify": "*",
     "amazon-product-api": "*"
   },
   "author": "binlang",
