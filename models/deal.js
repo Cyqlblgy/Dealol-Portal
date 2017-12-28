@@ -1,23 +1,23 @@
 var itemName = '';
 var itemId = 0;
 var itemPrice = '';
-var itemLongDescription = '';
 var itemURL = '';
 var customerRate = '';
 var numberOfReviews = 0;
+var source = '';
 
 //Public
 module.exports = Deal;
 
-function Deal(itemName, itemId, itemPrice, itemLongDescription,
-itemURL,customerRate,numberOfReviews){
+function Deal(itemName, itemId, itemPrice,
+itemURL,customerRate,numberOfReviews,source){
   this.itemName = itemName;
   this.itemId = itemId;
   this.itemPrice = itemPrice;
-  this.itemLongDescription = itemLongDescription;
   this.itemURL = itemURL;
   this.customerRate = customerRate;
   this.numberOfReviews = numberOfReviews;
+  this.source = source;
 }
 
 Deal.prototype.itemName = function(){

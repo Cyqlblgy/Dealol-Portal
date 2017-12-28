@@ -10,14 +10,17 @@ function Deals(){
 Deals.prototype.addDeals = function(source,data){
   if(source == 'Walmart'){
     data.items.forEach(function(value){
-      deals.push(new Deal(value.name,value.itemId,value.salePrice,
-                  value.longDescription,value.productUrl,value.customerRating,
-                  value.numReviews
+      deals.push(new Deal(value.name,value.itemId,value.salePrice,value.productUrl,value.customerRating,
+                  value.numReviews,'Walmart'
                 ));
     });
   }
   else if(source == 'Amazon'){
-    //TODO
+    data.forEach(function(value){
+      deals.push(new Deal(value.ItemAttributes[0].Title[0],value.ASIN[0],(value.ItemAttributes[0].ListPrice[0].Amount)/100.00,
+                  value.DetailPageURL[0],null,0,'Amazon'
+                ));
+    });
   }
 }
 

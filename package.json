@@ -13,7 +13,8 @@
     "mongoose": "*",
     "https": "*",
     "url": "*",
-    "restify": "*"
+    "restify": "*",
+    "amazon-product-api": "*"
   },
   "author": "binlang",
   "license": "ISC"

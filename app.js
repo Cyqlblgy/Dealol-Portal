@@ -5,11 +5,14 @@ var mongoose = require('mongoose');
 var url = require('url');
 var https = require('https');
 var Deals = require('./models/deals');
-var restify = require('restify');
+var amazon = require('amazon-product-api');
 
 //Var initialization
 var host = 'api.walmartlabs.com';
 var apiKey = 'qfnzsf9wyvhcr4szm7se78sb';
+var amazonAccessKey = 'AKIAIYZUZQH63IE52UEA';
+var amazonSecretKey = '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';
+var amazonTag = 'dealol-20';
 
 //Connect to mongoose, TODO: add db if necessary
 // mongoose.connect('mongodb://localhost/server',{ useMongoClient: true });
@@ -21,6 +24,12 @@ app.set('host', process.env.HOST || '0.0.0.0');
 app.listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('host') + ':' + app.get('port'));
 });
+
+var client = amazon.createClient({
+  awsId: amazonAccessKey,
+  awsSecret: amazonSecretKey,
+  awsTag: amazonTag
+})
 
 function performRequest(endpoint, method, data, success) {
   var dataString = JSON.stringify(data);
@@ -60,38 +69,50 @@ function performRequest(endpoint, method, data, success) {
   req.end();
 }
 
-app.get('/api/deals/search',function(req, res){
-  var baseEndPoint = '/v1/search?apiKey=' + apiKey;
+app.get('/deals/search',function(req, res){
   var queryData = url.parse(req.url, true).query;
   var resultDeals = new Deals();
   console.log(queryData);
+  var isAmazonReady = false,
+      isWalmartReady = false;
+  //Walmart API
   if(queryData.productName != null){
-      baseEndPoint += '&query=' + queryData.productName;
-    //categoryId
-    if(queryData.categoryId != null){
-      baseEndPoint += '&categoryId=' + queryData.categoryId;
-    }
-    //sort
-    if(queryData.sort != null){
-      baseEndPoint += '&sort=' + queryData.sort;
-    }
+
+    //Walmart Search
+    var baseEndPoint = '/v1/search?apiKey=' + apiKey;
+    baseEndPoint += '&query=' + queryData.productName;
     //start
     if(queryData.start != null){
       baseEndPoint += '&start=' + queryData.start;
     }
-    //order
-    if(queryData.order != null){
-      baseEndPoint += '&order=' + queryData.order;
-    }
-    //numItems
-    if(queryData.numItems != null){
-      baseEndPoint += '&numItems=' + queryData.numItems;
-    }
-    console.log(baseEndPoint);
     performRequest(baseEndPoint, 'GET', null,
     function(data) {
       resultDeals.addDeals('Walmart',data);
-      res.send(resultDeals.getAllDeals());
+      isWalmartReady = true;
+      if(isAmazonReady && isWalmartReady){
+        res.send(resultDeals.getAllDeals());
+      }
+    });
+
+    //Amazon Search
+    client.itemSearch({
+      keywords: queryData.productName,
+      itemPage: queryData.start,
+      availability: 'Available',
+      responseGroup: 'ItemAttributes'
+    }).then(function(results){
+      resultDeals.addDeals('Amazon',results);
+      console.log(JSON.stringify(results, null, 4));
+      isAmazonReady = true;
+      if(isAmazonReady && isWalmartReady){
+        res.send(resultDeals.getAllDeals());
+      }
+    }).catch(function(err){
+      var result = JSON.stringify(err);
+      console.log(result);
+      console.log(err);
+      res.status(500);
+      res.send('something went wrong with Amazon API: ' + result + ' err: '+ err);
     });
   }
   else{
