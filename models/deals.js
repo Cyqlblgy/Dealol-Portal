@@ -8,7 +8,7 @@ function Deals(){
   this.totalNumber = 0;
 
   this.addDeals = function(source,data){
-    if(source == 'Walmart'){
+    if(source == 'Walmart' && data != null && data.items != null){
       for(var i=0;i<data.items.length;i++){
         var value = data.items[i];
         this.resultDeals.push(new Deal(value.name,value.itemId,value.salePrice,value.productUrl,value.customerRating,
@@ -17,7 +17,7 @@ function Deals(){
         this.totalNumber += 1;
       }
     }
-    else if(source == 'Amazon'){
+    else if(source == 'Amazon' && data != null){
       for(var i=0;i<data.length;i++){
         var value = data[i];
         if(value.ItemAttributes[0].ListPrice != null && value.ItemAttributes[0].ListPrice[0].Amount != null){

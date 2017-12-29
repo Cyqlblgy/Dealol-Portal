@@ -27,7 +27,7 @@ var client = amazon.createClient({
   awsTag: process.env.AmazonTag || 'dealol-20'
 })
 
-function performRequest(endpoint, method, data, success) {
+function performRequest(endpoint, method, data, success, error) {
   var dataString = JSON.stringify(data);
   var headers = {};
 
@@ -62,6 +62,9 @@ function performRequest(endpoint, method, data, success) {
   });
 
   req.write(dataString);
+  req.on('error', function(err) {
+      error(err);
+  });
   req.end();
 }
 
@@ -85,7 +88,7 @@ app.get('/deals/search',function(req, res){
     baseEndPoint += '&sort=relevance';
     console.log(baseEndPoint);
     performRequest(baseEndPoint, 'GET', null,
-    function(data) {
+    function(data){
       console.log('Walmart before ' + resultDeals.getAllDeals().length);
       resultDeals.addDeals('Walmart',data);
       console.log('Walmart after ' + resultDeals.getAllDeals().length);
@@ -93,6 +96,13 @@ app.get('/deals/search',function(req, res){
       if(isAmazonReady && isWalmartReady){
         res.send(resultDeals);
       }
+    },
+    function(err){
+      var result = JSON.stringify(err);
+      console.log(result);
+      console.log(err);
+      res.status(500);
+      res.send('something went wrong with Walmart API: ' + result + ' err: '+ err);
     });
 
     //Amazon Search
