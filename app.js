@@ -76,12 +76,14 @@ app.get('/deals/search',function(req, res){
 
     //Walmart Search
     var baseEndPoint = '/v1/search?apiKey=' + walmartApiKey;
-    baseEndPoint += '&query=' + queryData.productName;
+    baseEndPoint += '&query=' + encodeURIComponent(queryData.productName);
     //start
     if(queryData.start != null){
       baseEndPoint += '&start=' + queryData.start;
       baseEndPoint += '&end=' + queryData.start+1;
     }
+    baseEndPoint += '&sort=relevance';
+    console.log(baseEndPoint);
     performRequest(baseEndPoint, 'GET', null,
     function(data) {
       console.log('Walmart before ' + resultDeals.getAllDeals().length);
