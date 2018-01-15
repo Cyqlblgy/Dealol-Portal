@@ -5,6 +5,7 @@ var mongoose = require('mongoose');
 var url = require('url');
 var https = require('https');
 var Deals = require('./models/deals');
+var ItemSearchResult = require('./models/itemSearchResult');
 var amazon = require('amazon-product-api');
 
 //Connect to mongoose, TODO: add db if necessary
@@ -121,7 +122,7 @@ function performSearchDeals(keywords, page , res, error){
       resultDeals.addDeals('Amazon',results);
       if(response[0] != null &&
       response[0].TotalResults != null){
-        resultDeals.amazonTotal = response[0].TotalResults[0];
+        resultDeals.amazonTotal = parseInt(response[0].TotalResults[0]);
       }
       isAmazonReady = true;
       if(isAmazonReady && isWalmartReady){
@@ -147,18 +148,11 @@ app.get('/deal',function(req, res){
         if(data.modelNumber != null){
           keywords += ' ' + data.modelNumber;
         }
-        performSearchDeals(keywords, 1,
-          function(resultDeals){
-          res.send(resultDeals);
-        }, function(error){
-          res.status(500);
-          res.send(error);
-        });
+        res.send(new ItemSearchResult(keywords))
       },
       function(err){
         var result = JSON.stringify(err);
         console.log(result);
-        console.log(err);
         res.status(500);
         res.send('something went wrong with Walmart lookup API: ' +
         result + ' err: '+ err);
@@ -171,23 +165,17 @@ app.get('/deal',function(req, res){
         itemId: queryData.id
       }).then(function(results){
         var value = results[0];
-        var keyword = value.ItemAttributes[0].Title[0];
+        var keywords = value.ItemAttributes[0].Title[0];
         if(value.ItemAttributes[0].Model != null){
-          keyword += ' ' + value.ItemAttributes[0].Model[0];
+          keywords += ' ' + value.ItemAttributes[0].Model[0];
         }
         console.log('Name :' + value.ItemAttributes[0].Title[0] + ' model:' + value.ItemAttributes[0].Model[0]);
-        performSearchDeals(keyword, 1,
-          function(resultDeals){
-          res.send(resultDeals);
-        }, function(error){
-          res.status(500);
-          res.send(error);
-        });
+        res.send(new ItemSearchResult(keywords))
       }).catch(function(err){
         var result = JSON.stringify(err);
         console.log(result);
-        console.log(err);
-        error('something went wrong with Amazon lookup API: ' + result + ' err: '+ err);
+        res.status(500);
+        res.send('something went wrong with Amazon lookup API: ' + ' err: '+ err);
       });
      }
   }

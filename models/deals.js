@@ -21,7 +21,6 @@ function Deals(){
       }
     }
     else if(source == 'Amazon' && data != null){
-      this.amazonTotal = data.TotalResults;
       for(var i=0;i<data.length;i++){
         var value = data[i];
         console.log(JSON.stringify(value.OfferSummary,null,1));
