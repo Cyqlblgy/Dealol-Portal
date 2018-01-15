@@ -68,68 +68,149 @@ function performRequest(endpoint, method, data, success, error) {
   req.end();
 }
 
-app.get('/deals/search',function(req, res){
-  var queryData = url.parse(req.url, true).query;
+function performSearchDeals(keywords, page , res, error){
   var resultDeals = new Deals();
-  console.log(queryData);
   var isAmazonReady = false,
       isWalmartReady = false;
-  //Walmart API
-  if(queryData.productName != null){
+  //Walmart Search
+  var baseEndPoint = '/v1/search?apiKey=' + walmartApiKey;
+  baseEndPoint += '&query=' + encodeURIComponent(keywords);
+  //start
+  baseEndPoint += '&start=' + page;
+  baseEndPoint += '&end=' + page+1;
+  baseEndPoint += '&sort=relevance';
 
-    //Walmart Search
-    var baseEndPoint = '/v1/search?apiKey=' + walmartApiKey;
-    baseEndPoint += '&query=' + encodeURIComponent(queryData.productName);
-    //start
-    if(queryData.start != null){
-      baseEndPoint += '&start=' + queryData.start;
-      baseEndPoint += '&end=' + queryData.start+1;
+  console.log(baseEndPoint);
+  performRequest(baseEndPoint, 'GET', null,
+  function(data){
+    console.log(JSON.stringify(data, null, 4));
+    resultDeals.addDeals('Walmart',data);
+    isWalmartReady = true;
+    if(isAmazonReady && isWalmartReady){
+      res(resultDeals);
     }
-    baseEndPoint += '&sort=relevance';
-    console.log(baseEndPoint);
-    performRequest(baseEndPoint, 'GET', null,
-    function(data){
-      console.log('Walmart before ' + resultDeals.getAllDeals().length);
-      resultDeals.addDeals('Walmart',data);
-      console.log('Walmart after ' + resultDeals.getAllDeals().length);
-      isWalmartReady = true;
-      if(isAmazonReady && isWalmartReady){
-        res.send(resultDeals);
+  },
+  function(err){
+    var result = JSON.stringify(err);
+    console.log(result);
+    console.log(err);
+    error('something went wrong with Walmart API: ' + result + ' err: '+ err);
+  });
+
+  //Amazon Search
+  client.itemSearch({
+    keywords: keywords,
+    itemPage: page,
+    availability: 'Available',
+    responseGroup: 'ItemAttributes,Images,OfferSummary'
+  },function(err, results, response) {
+    if (err) {
+      if(err[0].Error != null && err[0].Error[0].Code != null
+        && err[0].Error[0].Code[0] == 'AWS.ECommerceService.NoExactMatches'){
+        isAmazonReady = true;
+        if(isAmazonReady && isWalmartReady){
+             res(resultDeals);
+        }
+        return;
       }
-    },
-    function(err){
       var result = JSON.stringify(err);
       console.log(result);
       console.log(err);
-      res.status(500);
-      res.send('something went wrong with Walmart API: ' + result + ' err: '+ err);
-    });
-
-    //Amazon Search
-    client.itemSearch({
-      keywords: queryData.productName,
-      itemPage: queryData.start,
-      availability: 'Available',
-      responseGroup: 'ItemAttributes,Images'
-    }).then(function(results){
-      console.log(JSON.stringify(results, null, 4));
-      console.log('Amazon before ' + resultDeals.getAllDeals().length);
+      error('something went wrong with Amazon API: ' + result + ' err: '+ err);
+    } else {
       resultDeals.addDeals('Amazon',results);
-      console.log('Amazon before ' + resultDeals.getAllDeals().length);
+      if(response[0] != null &&
+      response[0].TotalResults != null){
+        resultDeals.amazonTotal = response[0].TotalResults[0];
+      }
       isAmazonReady = true;
       if(isAmazonReady && isWalmartReady){
-        res.send(resultDeals);
+           res(resultDeals);
       }
-    }).catch(function(err){
-      var result = JSON.stringify(err);
-      console.log(result);
-      console.log(err);
+    }
+  });
+}
+
+app.get('/deal',function(req, res){
+  var queryData = url.parse(req.url, true).query;
+  console.log(queryData);
+  if(queryData.source != null &&
+     queryData.id != null){
+    if(queryData.source =='Walmart'){
+      //Walmart Search
+      var baseEndPoint = '/v1/items/'+queryData.id+'?apiKey=' + walmartApiKey;
+      console.log(baseEndPoint);
+      performRequest(baseEndPoint, 'GET', null,
+      function(data){
+        console.log('Name :' + data.name + ' model:' + data.modelNumber);
+        var keywords = data.name;
+        if(data.modelNumber != null){
+          keywords += ' ' + data.modelNumber;
+        }
+        performSearchDeals(keywords, 1,
+          function(resultDeals){
+          res.send(resultDeals);
+        }, function(error){
+          res.status(500);
+          res.send(error);
+        });
+      },
+      function(err){
+        var result = JSON.stringify(err);
+        console.log(result);
+        console.log(err);
+        res.status(500);
+        res.send('something went wrong with Walmart lookup API: ' +
+        result + ' err: '+ err);
+      });
+    }
+    else if(queryData.source =='Amazon'){
+      //Amazon Search
+      client.itemLookup({
+        idType: 'ASIN',
+        itemId: queryData.id
+      }).then(function(results){
+        var value = results[0];
+        var keyword = value.ItemAttributes[0].Title[0];
+        if(value.ItemAttributes[0].Model != null){
+          keyword += ' ' + value.ItemAttributes[0].Model[0];
+        }
+        console.log('Name :' + value.ItemAttributes[0].Title[0] + ' model:' + value.ItemAttributes[0].Model[0]);
+        performSearchDeals(keyword, 1,
+          function(resultDeals){
+          res.send(resultDeals);
+        }, function(error){
+          res.status(500);
+          res.send(error);
+        });
+      }).catch(function(err){
+        var result = JSON.stringify(err);
+        console.log(result);
+        console.log(err);
+        error('something went wrong with Amazon lookup API: ' + result + ' err: '+ err);
+      });
+     }
+  }
+  else{
+    res.status(400);
+    res.send('source and id are required');
+  }
+});
+
+app.get('/deals/search',function(req, res){
+  var queryData = url.parse(req.url, true).query;
+  console.log(queryData);
+  if(queryData.keywords != null && queryData.page != null){
+    performSearchDeals(queryData.keywords, queryData.page,
+      function(resultDeals){
+      res.send(resultDeals);
+    }, function(error){
       res.status(500);
-      res.send('something went wrong with Amazon API: ' + result + ' err: '+ err);
+      res.send(error);
     });
   }
   else{
     res.status(400);
-    res.send('productName is required');
+    res.send('keywords and page is required');
   }
 });
