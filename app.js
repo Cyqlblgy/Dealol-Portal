@@ -81,7 +81,7 @@ function performSearchDeals(keywords, page, brandName, price, res, error){
   var endPage = parseInt(page)
   endPage += 1
   baseEndPoint += '&end=' + endPage;
-  baseEndPoint += '&sort=bestseller';
+  baseEndPoint += '&sort=relevance';
 
   if(brandName){
     baseEndPoint += '&facet=on&facet.filter=brand:' + encodeURIComponent(brandName);
