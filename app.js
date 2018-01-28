@@ -69,7 +69,7 @@ function performRequest(endpoint, method, data, success, error) {
   req.end();
 }
 
-function performSearchDeals(keywords, page , res, error){
+function performSearchDeals(keywords, page, brandName, price, res, error){
   var resultDeals = new Deals();
   var isAmazonReady = false,
       isWalmartReady = false;
@@ -81,7 +81,14 @@ function performSearchDeals(keywords, page , res, error){
   var endPage = parseInt(page)
   endPage += 1
   baseEndPoint += '&end=' + endPage;
-  baseEndPoint += '&sort=relevance';
+  baseEndPoint += '&sort=bestseller';
+
+  if(brandName){
+    baseEndPoint += '&facet=on&facet.filter=brand:' + encodeURIComponent(brandName);
+    if(price>0){
+      baseEndPoint += '&facet.range=price:[' + parseInt(price*0.3) + '%20TO%20' + parseInt(price*2) + ']';
+    }
+  }
 
   console.log(baseEndPoint);
   performRequest(baseEndPoint, 'GET', null,
@@ -105,6 +112,9 @@ function performSearchDeals(keywords, page , res, error){
     keywords: keywords,
     itemPage: page,
     availability: 'Available',
+    condition: 'New',
+    maximumPrice: parseInt(price*200).toString(),
+    minimumPrice: parseInt(price*30).toString(),
     responseGroup: 'ItemAttributes,Images,OfferSummary'
   },function(err, results, response) {
     if (err) {
@@ -145,13 +155,13 @@ app.get('/deal',function(req, res){
       console.log(baseEndPoint);
       performRequest(baseEndPoint, 'GET', null,
       function(data){
-        console.log(JSON.stringify(dataok));
+        console.log(JSON.stringify(data));
         console.log('Name :' + data.name + ' model:' + data.modelNumber);
         var keywords = data.name;
         if(data.modelNumber != null){
           keywords += ' ' + data.modelNumber;
         }
-        res.send(new ItemSearchResult(keywords,data.brandName))
+        res.send(new ItemSearchResult(keywords,data.brandName,data.msrp))
       },
       function(err){
         var result = JSON.stringify(err);
@@ -173,7 +183,15 @@ app.get('/deal',function(req, res){
           keywords += ' ' + value.ItemAttributes[0].Model[0];
         }
         console.log('Name :' + value.ItemAttributes[0].Title[0] + ' model:' + value.ItemAttributes[0].Model[0]);
-        res.send(new ItemSearchResult(keywords,value.ItemAttributes[0].Manufacturer[0]))
+        var brandName;
+        if(value.ItemAttributes[0].Manufacturer != null){
+          brandName = value.ItemAttributes[0].Manufacturer[0];
+        }
+        var price = 0.00;
+        if(value.ItemAttributes[0].ListPrice != null && value.ItemAttributes[0].ListPrice[0].Amount != null){
+          price = (value.ItemAttributes[0].ListPrice[0].Amount[0])/100.00;
+        }
+        res.send(new ItemSearchResult(keywords,brandName,price))
       }).catch(function(err){
         var result = JSON.stringify(err);
         console.log(result);
@@ -193,6 +211,8 @@ app.get('/deals/search',function(req, res){
   console.log(queryData);
   if(queryData.keywords != null && queryData.page != null){
     performSearchDeals(queryData.keywords, queryData.page,
+      queryData.brandName,
+      queryData.price,
       function(resultDeals){
       res.send(resultDeals);
     }, function(error){
