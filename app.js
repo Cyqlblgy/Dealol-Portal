@@ -78,7 +78,9 @@ function performSearchDeals(keywords, page , res, error){
   baseEndPoint += '&query=' + encodeURIComponent(keywords);
   //start
   baseEndPoint += '&start=' + page;
-  baseEndPoint += '&end=' + page+1;
+  var endPage = parseInt(page)
+  endPage += 1
+  baseEndPoint += '&end=' + endPage;
   baseEndPoint += '&sort=relevance';
 
   console.log(baseEndPoint);
@@ -143,12 +145,13 @@ app.get('/deal',function(req, res){
       console.log(baseEndPoint);
       performRequest(baseEndPoint, 'GET', null,
       function(data){
+        console.log(JSON.stringify(dataok));
         console.log('Name :' + data.name + ' model:' + data.modelNumber);
         var keywords = data.name;
         if(data.modelNumber != null){
           keywords += ' ' + data.modelNumber;
         }
-        res.send(new ItemSearchResult(keywords))
+        res.send(new ItemSearchResult(keywords,data.brandName))
       },
       function(err){
         var result = JSON.stringify(err);
@@ -170,7 +173,7 @@ app.get('/deal',function(req, res){
           keywords += ' ' + value.ItemAttributes[0].Model[0];
         }
         console.log('Name :' + value.ItemAttributes[0].Title[0] + ' model:' + value.ItemAttributes[0].Model[0]);
-        res.send(new ItemSearchResult(keywords))
+        res.send(new ItemSearchResult(keywords,value.ItemAttributes[0].Manufacturer[0]))
       }).catch(function(err){
         var result = JSON.stringify(err);
         console.log(result);
