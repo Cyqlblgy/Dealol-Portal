@@ -158,9 +158,9 @@ app.get('/deal',function(req, res){
         console.log(JSON.stringify(data));
         console.log('Name :' + data.name + ' model:' + data.modelNumber);
         var keywords = data.name;
-        if(data.modelNumber != null){
-          keywords += ' ' + data.modelNumber;
-        }
+        // if(data.modelNumber != null){
+        //   keywords += ' ' + data.modelNumber;
+        // }
         res.send(new ItemSearchResult(keywords,data.brandName,data.msrp))
       },
       function(err){
@@ -179,9 +179,9 @@ app.get('/deal',function(req, res){
       }).then(function(results){
         var value = results[0];
         var keywords = value.ItemAttributes[0].Title[0];
-        if(value.ItemAttributes[0].Model != null){
-          keywords += ' ' + value.ItemAttributes[0].Model[0];
-        }
+        // if(value.ItemAttributes[0].Model != null){
+        //   keywords += ' ' + value.ItemAttributes[0].Model[0];
+        // }
         console.log('Name :' + value.ItemAttributes[0].Title[0] + ' model:' + value.ItemAttributes[0].Model[0]);
         var brandName;
         if(value.ItemAttributes[0].Manufacturer != null){
