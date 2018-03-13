@@ -69,7 +69,7 @@ function performRequest(endpoint, method, data, success, error) {
   req.end();
 }
 
-function performSearchDeals(keywords, page, brandName, price, res, error){
+function performSearchDeals(keywords, page, brandName, price, categoryID, res, error){
   var resultDeals = new Deals();
   var isAmazonReady = false,
       isWalmartReady = false;
@@ -88,6 +88,10 @@ function performSearchDeals(keywords, page, brandName, price, res, error){
     if(price>0){
       baseEndPoint += '&facet.range=price:[' + parseInt(price*0.3) + '%20TO%20' + parseInt(price*2) + ']';
     }
+  }
+
+  if(categoryID){
+    baseEndPoint += '&categoryId=' + categoryID;
   }
 
   console.log(baseEndPoint);
@@ -149,19 +153,19 @@ app.get('/deal',function(req, res){
   console.log(queryData);
   if(queryData.source != null &&
      queryData.id != null){
-    if(queryData.source =='Walmart'){
+    if(queryData.source === 'Walmart'){
       //Walmart Search
       var baseEndPoint = '/v1/items/'+queryData.id+'?apiKey=' + walmartApiKey;
       console.log(baseEndPoint);
       performRequest(baseEndPoint, 'GET', null,
       function(data){
         console.log(JSON.stringify(data));
-        console.log('Name :' + data.name + ' model:' + data.modelNumber);
+        console.log('Name :' + data.name + ' model:' + data.modelNumber + ' categoryID: ' + data.categoryNode + ' price: ' + data.salePrice);
         var keywords = data.name;
         // if(data.modelNumber != null){
         //   keywords += ' ' + data.modelNumber;
         // }
-        res.send(new ItemSearchResult(keywords,data.brandName,data.msrp))
+        res.send(new ItemSearchResult(keywords,data.brandName,data.salePrice,data.categoryNode))
       },
       function(err){
         var result = JSON.stringify(err);
@@ -171,34 +175,34 @@ app.get('/deal',function(req, res){
         result + ' err: '+ err);
       });
     }
-    else if(queryData.source =='Amazon'){
-      //Amazon Search
-      client.itemLookup({
-        idType: 'ASIN',
-        itemId: queryData.id
-      }).then(function(results){
-        var value = results[0];
-        var keywords = value.ItemAttributes[0].Title[0];
-        // if(value.ItemAttributes[0].Model != null){
-        //   keywords += ' ' + value.ItemAttributes[0].Model[0];
-        // }
-        console.log('Name :' + value.ItemAttributes[0].Title[0] + ' model:' + value.ItemAttributes[0].Model[0]);
-        var brandName;
-        if(value.ItemAttributes[0].Manufacturer != null){
-          brandName = value.ItemAttributes[0].Manufacturer[0];
-        }
-        var price = 0.00;
-        if(value.ItemAttributes[0].ListPrice != null && value.ItemAttributes[0].ListPrice[0].Amount != null){
-          price = (value.ItemAttributes[0].ListPrice[0].Amount[0])/100.00;
-        }
-        res.send(new ItemSearchResult(keywords,brandName,price))
-      }).catch(function(err){
-        var result = JSON.stringify(err);
-        console.log(result);
-        res.status(500);
-        res.send('something went wrong with Amazon lookup API: ' + ' err: '+ err);
-      });
-     }
+    // else if(queryData.source =='Amazon'){
+    //   //Amazon Search
+    //   client.itemLookup({
+    //     idType: 'ASIN',
+    //     itemId: queryData.id
+    //   }).then(function(results){
+    //     var value = results[0];
+    //     var keywords = value.ItemAttributes[0].Title[0];
+    //     // if(value.ItemAttributes[0].Model != null){
+    //     //   keywords += ' ' + value.ItemAttributes[0].Model[0];
+    //     // }
+    //     console.log('Name :' + value.ItemAttributes[0].Title[0] + ' model:' + value.ItemAttributes[0].Model[0]);
+    //     var brandName;
+    //     if(value.ItemAttributes[0].Manufacturer != null){
+    //       brandName = value.ItemAttributes[0].Manufacturer[0];
+    //     }
+    //     var price = 0.00;
+    //     if(value.ItemAttributes[0].ListPrice != null && value.ItemAttributes[0].ListPrice[0].Amount != null){
+    //       price = (value.ItemAttributes[0].ListPrice[0].Amount[0])/100.00;
+    //     }
+    //     res.send(new ItemSearchResult(keywords,brandName,price))
+    //   }).catch(function(err){
+    //     var result = JSON.stringify(err);
+    //     console.log(result);
+    //     res.status(500);
+    //     res.send('something went wrong with Amazon lookup API: ' + ' err: '+ err);
+    //   });
+    //  }
   }
   else{
     res.status(400);
@@ -213,6 +217,7 @@ app.get('/deals/search',function(req, res){
     performSearchDeals(queryData.keywords, queryData.page,
       queryData.brandName,
       queryData.price,
+      queryData.categoryID,
       function(resultDeals){
       res.send(resultDeals);
     }, function(error){
