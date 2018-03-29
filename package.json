@@ -8,12 +8,13 @@
     "test": "echo \"Error: no test specified\""
   },
   "dependencies": {
-    "express": "*",
+    "amazon-product-api": "*",
     "body-parser": "*",
-    "mongoose": "*",
+    "express": "*",
     "https": "*",
-    "url": "*",
-    "amazon-product-api": "*"
+    "mongoose": "*",
+    "npm": "^5.8.0",
+    "url": "*"
   },
   "author": "binlang",
   "license": "ISC"

@@ -23,7 +23,6 @@ function Deals(){
     else if(source == 'Amazon' && data != null){
       for(var i=0;i<data.length;i++){
         var value = data[i];
-        console.log(JSON.stringify(value.OfferSummary,null,1));
         console.log(JSON.stringify(value.ItemAttributes,null,1));
         if(value.ItemAttributes[0].ListPrice != null && value.ItemAttributes[0].ListPrice[0].Amount != null){
           var price = (value.ItemAttributes[0].ListPrice[0].Amount[0])/100.00;
@@ -39,6 +38,9 @@ function Deals(){
                       value.DetailPageURL[0],null,0,imageURL,'Amazon'
                     ));
           this.totalNumber += 1;
+        }
+        else{
+          this.amazonTotal -= 1;
         }
       }
     }

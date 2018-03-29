@@ -86,7 +86,7 @@ function performSearchDeals(keywords, page, brandName, price, categoryID, res, e
   if(brandName){
     baseEndPoint += '&facet=on&facet.filter=brand:' + encodeURIComponent(brandName);
     if(price>0){
-      baseEndPoint += '&facet.range=price:[' + parseInt(price*0.3) + '%20TO%20' + parseInt(price*2) + ']';
+      baseEndPoint += '&facet.range=price:[' + parseInt(price*0.8) + '%20TO%20' + parseInt(price*1.2) + ']';
     }
   }
 
@@ -117,8 +117,8 @@ function performSearchDeals(keywords, page, brandName, price, categoryID, res, e
     itemPage: page,
     availability: 'Available',
     condition: 'New',
-    maximumPrice: parseInt(price*200).toString(),
-    minimumPrice: parseInt(price*30).toString(),
+    maximumPrice: parseInt(price*120).toString(),
+    minimumPrice: parseInt(price*80).toString(),
     responseGroup: 'ItemAttributes,Images,OfferSummary'
   },function(err, results, response) {
     if (err) {
@@ -135,11 +135,11 @@ function performSearchDeals(keywords, page, brandName, price, categoryID, res, e
       console.log(err);
       error('something went wrong with Amazon API: ' + result + ' err: '+ err);
     } else {
-      resultDeals.addDeals('Amazon',results);
       if(response[0] != null &&
       response[0].TotalResults != null){
         resultDeals.amazonTotal = parseInt(response[0].TotalResults[0]);
       }
+      resultDeals.addDeals('Amazon',results);
       isAmazonReady = true;
       if(isAmazonReady && isWalmartReady){
            res(resultDeals);
