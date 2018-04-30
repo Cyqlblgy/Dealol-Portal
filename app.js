@@ -117,11 +117,13 @@ function performSearchDeals(keywords, page, brandName, price, categoryID, res, e
     itemPage: page,
     availability: 'Available',
     condition: 'New',
-    maximumPrice: parseInt(price*120).toString(),
+    maximumPrice: parseInt(price*150).toString(),
     minimumPrice: parseInt(price*80).toString(),
     responseGroup: 'ItemAttributes,Images,OfferSummary'
   },function(err, results, response) {
     if (err) {
+      var result = JSON.stringify(err);
+      console.log(result);
       if(err[0].Error != null && err[0].Error[0].Code != null
         && err[0].Error[0].Code[0] == 'AWS.ECommerceService.NoExactMatches'){
         isAmazonReady = true;
@@ -130,9 +132,6 @@ function performSearchDeals(keywords, page, brandName, price, categoryID, res, e
         }
         return;
       }
-      var result = JSON.stringify(err);
-      console.log(result);
-      console.log(err);
       error('something went wrong with Amazon API: ' + result + ' err: '+ err);
     } else {
       if(response[0] != null &&
