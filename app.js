@@ -13,8 +13,8 @@ var amazon = require('amazon-product-api');
 // var db = mongoose.connection;
 
 //Var initialization
-app.set('port', process.env.PORT || 3000);
-app.set('host', process.env.HOST || '0.0.0.0');
+app.set('port', process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 3000);
+app.set('host', process.env.HOST || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0');
 var walmartHost = process.env.WalmartHost || 'api.walmartlabs.com';
 var walmartApiKey = process.env.WalmartApiKey || 'qfnzsf9wyvhcr4szm7se78sb';
 
